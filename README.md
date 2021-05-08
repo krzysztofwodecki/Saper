@@ -40,7 +40,7 @@ Po naciśnięciu kolejno klawiszy [x, y, z, z, y](https://en.wikipedia.org/wiki/
 1. Próba rozpoczęcia gry z rozmiarem planszy i liczbą min: (1 na 1; 1), (5 na 1; 2), (4 na
 1; 2), (20 na 500; 12), (5 na 6; -4), (3 na 3, 10), (1 na 10; 5) - oczekiwane komunikaty
 o błędzie. Wprowadzenie rozmiarów planszy 8 na 8 i liczby min równej 12 na
-potrzeby kolejnych testów.
+potrzeby kolejnych testów. 
 
 2. Kliknięcie pola, wyświetla się liczba min w sąsiedztwie pola,
 
