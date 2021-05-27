@@ -8,7 +8,7 @@ wprowadzenie liczby min na planszy, liczbę oznaczonych pól, liczbę min na pla
 oraz przycisk rozpoczęcia nowej gry.
 
 Wprowadzenie mniejszego rozmiaru planszy niż 2x2 lub większego niż 15x15, liczby
-min mniejszej niż O lub większej niż m\*n powoduje wyświetlenie komunikatu o
+min mniejszej niż 0 lub większej niż m\*n powoduje wyświetlenie komunikatu o
 błędzie. Nie można rozpocząć gry dopóki te parametry nie są poprawne. Walidacja
 danych powinna wykorzystywać mechanizm wyjątków.
 
