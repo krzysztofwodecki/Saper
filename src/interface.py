@@ -1,7 +1,10 @@
 import pygame as pg
 
+black = (0, 0, 0)
+white = (255, 255, 255)
 
-def set_window(size=(400, 400), title=" ", color=(182, 182, 182)):
+
+def set_window(size=(400, 400), title=" ", color=(255, 255, 255)):
     """
     Funkcja tworząca okienko.
     :param size: rozmiar okna
@@ -28,14 +31,14 @@ def write_text(font, screen, text=" ", position=(0, 0), color=(0, 0, 0)):
     """
     img = font.render(text, True, color)
     screen.blit(img, position)
-    pg.display.update()
 
 
 class TextBox:
-    def __init__(self, x, y, w, h, font, color=(255, 255, 255)):
+    def __init__(self, x, y, w, h, font, default_color=white):
         self.width = w
         self.rect = pg.Rect(x, y, w, h)
-        self.color = color
+        self.default_color = default_color
+        self.color = default_color
         self.text = ""
         self.font = font
         self.txt_surface = font.render(self.text, True, self.color)
@@ -47,7 +50,7 @@ class TextBox:
                 self.active = not self.active
             else:
                 self.active = False
-            self.color = (0, 0, 0) if self.active else self.color
+            self.color = (0, 0, 0) if self.active else self.default_color
         if event.type == pg.KEYDOWN:
             if self.active:
                 if event.key == pg.K_RETURN:
