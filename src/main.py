@@ -4,13 +4,14 @@ if __name__ == '__main__':
     import logic
 
     background_color = (200, 200, 200)
+    fields_color = (120, 60, 40)
     screen = interface.set_window((395, 550), "Minesweeper", background_color)
     font = pg.font.SysFont('timesnewroman.ttf', 24)
     clock = pg.time.Clock()
 
     display = interface.Interface(screen, font, background_color)
 
-    game = logic.InitializeNewGame(6, 6, 4, screen)
+    game = logic.InitializeNewGame(6, 6, 4, screen, fields_color)
 
     running = True
     while running:
@@ -20,13 +21,13 @@ if __name__ == '__main__':
             if event.type == pg.QUIT:
                 running = False
             attributes_list = display.event_handler(event)
+            game.event_handler(event)
 
         if len(attributes_list) == 3:
-            print(attributes_list)
+            game = logic.InitializeNewGame(attributes_list[0], attributes_list[1],
+                                           attributes_list[2], screen, fields_color)
 
-        display.display()
-
-        game.display()
+        display.display(game)
 
         pg.display.update()
         clock.tick(60)

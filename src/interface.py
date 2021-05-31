@@ -35,16 +35,32 @@ def write_text(font, screen, text=" ", position=(0, 0), color=(0, 0, 0)):
 
 class FunctionalRectangle:
     def __init__(self, x, y, w, h, color=white):
-        self.left = x
-        self.top = y
-        self.width = w
-        self.height = h
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
         self.rect = pg.Rect(x, y, w, h)
         self.default_color = color
         self.color = color
 
-    def draw(self, screen, thickness):
+    def draw(self, screen, thickness=2, border=False):
         pg.draw.rect(screen, self.color, self.rect, thickness)
+        if border:
+            for i in range(4):
+                pg.draw.rect(screen, (0, 0, 0), (self.x - i, self.y - i,
+                                                 self.w + 2, self.h + 2), 1)
+
+    def get_x(self):
+        return self.x
+
+    def get_y(self):
+        return self.y
+
+    def get_w(self):
+        return self.w
+
+    def get_h(self):
+        return self.h
 
 
 class TextBox(FunctionalRectangle):
@@ -70,13 +86,13 @@ class TextBox(FunctionalRectangle):
                 elif event.key in [pg.K_0, pg.K_1, pg.K_2, pg.K_3, pg.K_4,
                                    pg.K_5, pg.K_6, pg.K_7, pg.K_8, pg.K_9]:
                     self.text += event.unicode
-                    if len(self.text) > self.width // 10:
+                    if len(self.text) > self.w // 10:
                         self.text = self.text[:-1]
                 self.txt_surface = self.font.render(self.text, True, self.color)
 
-    def draw(self, screen, thickness=2):
+    def draw(self, screen, thickness=2, border=False):
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        super().draw(screen, thickness)
+        super().draw(screen, thickness, False)
 
     def get_value(self):
         try:
@@ -101,10 +117,10 @@ class Button(FunctionalRectangle):
                 and self.rect.y <= mouse[1] <= self.rect.y + self.rect.h:
             a, b, c = self.default_color
             self.color = (a + 10 if a < 245 else 255, b + 10 if b < 245 else 255, c + 10 if c < 245 else 255)
-            super().draw(screen, thickness)
+            super().draw(screen, thickness, False)
         else:
             self.color = self.default_color
-            super().draw(screen, thickness)
+            super().draw(screen, thickness, False)
 
     def event_handler(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -112,6 +128,44 @@ class Button(FunctionalRectangle):
                 return True
             else:
                 return False
+
+
+class Field(FunctionalRectangle):
+    def __init__(self, x, y, w, h, color=white):
+        super().__init__(x, y, w, h, color)
+        self.activated = False
+        self.border_mines = None
+
+    def event_handler(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                if not self.activated:
+                    self.activated = True
+                    r, g, b = self.color
+                    self.color = (r + 30 if r <= 225 else 255, g + 30 if g <= 225 else 255, b + 30 if b <= 225 else 255)
+
+    def draw(self, screen, thickness=2, border=False):
+        super(Field, self).draw(screen, thickness, border)
+        font = pg.font.SysFont('timesnewroman.ttf', int(self.h//2))
+        if self.activated and self.border_mines != 0:
+            write_text(font, screen, str(self.border_mines), (self.x + self.w/2, self.y + self.h/2))
+
+    def set_border_mines(self, border_mines):
+        self.border_mines = border_mines
+
+    def __repr__(self):
+        return "Brak miny"
+
+
+class FieldWithMine(Field):
+    def __init__(self, x, y, w, h, color=white):
+        super().__init__(x, y, w, h, color)
+
+    def event_handler(self, event):
+        pass
+
+    def __repr__(self):
+        return "Mina"
 
 
 class Interface:
@@ -124,7 +178,7 @@ class Interface:
         self.button = Button(295, 5, 95, 95, (160, 100, 100))
         self.attributes = []
 
-    def display(self):
+    def display(self, game):
         self.screen.fill(self.background_color)
 
         for box in self.boxes:
@@ -134,13 +188,13 @@ class Interface:
         write_text(self.font, self.screen, "Liczba min:", (5, 55))
         write_text(self.font, self.screen, "x", (59, 27))
 
-        pg.draw.rect(self.screen, (160, 100, 100), pg.Rect(5, 160, 385, 385))
-
+        pg.draw.rect(self.screen, (0, 0, 0), pg.Rect(5, 160, 385, 385))
         pg.draw.line(self.screen, (0, 0, 0), (0, 105), (400, 105), 2)
 
         self.button.highlight(self.screen)
-
         pg.draw.polygon(self.screen, (0, 220, 0), [(325, 27), (325, 77), (365, 50)])
+
+        game.display(self.font)
 
     def event_handler(self, event):
         self.attributes = []
@@ -154,19 +208,3 @@ class Interface:
             box.event_handler(event)
 
         return self.attributes
-
-
-class Field(FunctionalRectangle):
-    def __init__(self, x, y, w, h):
-        super().__init__(x, y, w, h)
-
-    def event_handler(self, event):
-        pass
-
-
-class FieldWithMine(Field):
-    def __init__(self, x, y, w, h):
-        super().__init__(x, y, w, h)
-
-    def event_handler(self, event):
-        pass
