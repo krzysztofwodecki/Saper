@@ -60,6 +60,8 @@ class TextBox:
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
+                    if len(self.text) > self.width//10:
+                        self.text = self.text[:-1]
                 self.txt_surface = self.font.render(self.text, True, self.color)
 
     def draw(self, screen):
