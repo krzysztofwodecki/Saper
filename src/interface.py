@@ -47,8 +47,8 @@ class FunctionalRectangle:
         pg.draw.rect(screen, self.color, self.rect, thickness)
         if border:
             for i in range(4):
-                pg.draw.rect(screen, (0, 0, 0), (self.x - i, self.y - i,
-                                                 self.w + 2, self.h + 2), 1)
+                pg.draw.rect(screen, black, (self.x - i, self.y - i,
+                                             self.w + 2, self.h + 2), 1)
 
     def get_x(self):
         return self.x
@@ -117,17 +117,14 @@ class Button(FunctionalRectangle):
                 and self.rect.y <= mouse[1] <= self.rect.y + self.rect.h:
             a, b, c = self.default_color
             self.color = (a + 10 if a < 245 else 255, b + 10 if b < 245 else 255, c + 10 if c < 245 else 255)
-            super().draw(screen, thickness, False)
+            super().draw(screen, thickness, True)
         else:
             self.color = self.default_color
-            super().draw(screen, thickness, False)
+            super().draw(screen, thickness, True)
 
     def event_handler(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
-                return True
-            else:
-                return False
+            return self.rect.collidepoint(event.pos)
 
 
 class Field(FunctionalRectangle):
@@ -139,16 +136,22 @@ class Field(FunctionalRectangle):
     def event_handler(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
-                if not self.activated:
-                    self.activated = True
-                    r, g, b = self.color
-                    self.color = (r + 30 if r <= 225 else 255, g + 30 if g <= 225 else 255, b + 30 if b <= 225 else 255)
+                return self.activation()
+        return False
+
+    def activation(self):
+        if not self.activated:
+            self.activated = True
+            r, g, b = self.color
+            self.color = (r + 30 if r <= 225 else 255, g + 30 if g <= 225 else 255, b + 30 if b <= 225 else 255)
+            return self.border_mines == 0
 
     def draw(self, screen, thickness=2, border=False):
         super(Field, self).draw(screen, thickness, border)
-        font = pg.font.SysFont('timesnewroman.ttf', int(self.h//2))
+        font = pg.font.SysFont('timesnewroman.ttf', int(self.h // 1.5) if self.h <= self.w else int(self.w // 1.5))
         if self.activated and self.border_mines != 0:
-            write_text(font, screen, str(self.border_mines), (self.x + self.w/2, self.y + self.h/2))
+            write_text(font, screen, str(self.border_mines),
+                       (self.rect.centerx - font.get_height() / 3, self.rect.centery - font.get_height() / 2))
 
     def set_border_mines(self, border_mines):
         self.border_mines = border_mines
@@ -164,6 +167,12 @@ class FieldWithMine(Field):
     def event_handler(self, event):
         pass
 
+    def set_color(self, color):
+        self.color = color
+
+    def get_color(self):
+        return self.color
+
     def __repr__(self):
         return "Mina"
 
@@ -175,7 +184,7 @@ class Interface:
         self.background_color = background_color
         self.boxes = [TextBox(5, 23, 45, 25, font), TextBox(75, 23, 45, 25, font),
                       TextBox(5, 73, 115, 25, font)]
-        self.button = Button(295, 5, 95, 95, (160, 100, 100))
+        self.button = Button(295, 5, 95, 95, (200, 245, 200))
         self.attributes = []
 
     def display(self, game):
@@ -194,7 +203,7 @@ class Interface:
         self.button.highlight(self.screen)
         pg.draw.polygon(self.screen, (0, 220, 0), [(325, 27), (325, 77), (365, 50)])
 
-        game.display(self.font)
+        game.display()
 
     def event_handler(self, event):
         self.attributes = []
