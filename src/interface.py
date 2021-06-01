@@ -201,6 +201,7 @@ class Interface:
         pg.draw.line(self.screen, (0, 0, 0), (0, 105), (400, 105), 2)
 
         self.button.highlight(self.screen)
+
         pg.draw.polygon(self.screen, (0, 220, 0), [(325, 27), (325, 77), (365, 50)])
 
         game.display()
