@@ -105,6 +105,12 @@ class TextBox(FunctionalRectangle):
         self.text = ""
         self.txt_surface = self.font.render(self.text, True, self.color)
 
+    def isEmpty(self):
+        if len(self.text) == 0:
+            return True
+        else:
+            return False
+
 
 class Button(FunctionalRectangle):
     def __init__(self, x, y, w, h, default_color=white):
@@ -136,7 +142,11 @@ class Field(FunctionalRectangle):
     def event_handler(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
-                return self.activation()
+                left, _, right = pg.mouse.get_pressed(3)
+                if left:
+                    return self.activation()
+                if right:
+                    pass
         return False
 
     def activation(self):
@@ -156,6 +166,9 @@ class Field(FunctionalRectangle):
     def set_border_mines(self, border_mines):
         self.border_mines = border_mines
 
+    def get_clicked(self):
+        return self.clicked
+
     def __repr__(self):
         return "Brak miny"
 
@@ -169,7 +182,11 @@ class FieldWithMine(Field):
         if not self.activated:
             if event.type == pg.MOUSEBUTTONDOWN:
                 if self.rect.collidepoint(event.pos):
-                    return True
+                    left, _, right = pg.mouse.get_pressed(3)
+                    if left:
+                        return True
+                    if right:
+                        pass
         return False
 
     def set_color(self, color):
@@ -183,33 +200,54 @@ class FieldWithMine(Field):
 
 
 class Interface:
-    def __init__(self, screen, font, background_color):
+    def __init__(self, screen, font, game, background_color=white):
         self.screen = screen
         self.font = font
+        self.game = game
         self.background_color = background_color
         self.boxes = [TextBox(5, 23, 45, 25, font), TextBox(75, 23, 45, 25, font),
                       TextBox(5, 73, 115, 25, font)]
+        self.message = None
         self.button = Button(295, 5, 95, 95, (200, 245, 200))
         self.attributes = []
 
-    def display(self, game):
-        self.screen.fill(self.background_color)
-
+    def display_nonstop(self, update=False):
         for box in self.boxes:
             box.draw(self.screen)
+
+        self.button.highlight(self.screen)
+        pg.draw.polygon(self.screen, (0, 220, 0), [(325, 27), (325, 77), (365, 50)])
+
+        if update:
+            pg.display.update()
+
+    def display(self):
+        self.screen.fill(self.background_color)
 
         write_text(self.font, self.screen, "Rozmiar planszy:", (5, 5))
         write_text(self.font, self.screen, "Liczba min:", (5, 55))
         write_text(self.font, self.screen, "x", (59, 27))
 
-        pg.draw.rect(self.screen, (0, 0, 0), pg.Rect(5, 160, 385, 385))
+        self.display_nonstop()
+
         pg.draw.line(self.screen, (0, 0, 0), (0, 105), (400, 105), 2)
 
-        self.button.highlight(self.screen)
+        self.message = self.game.get_message()
 
-        pg.draw.polygon(self.screen, (0, 220, 0), [(325, 27), (325, 77), (365, 50)])
+        if self.message == 0:
+            write_text(self.font, self.screen, "Niepoprawny rozmiar planszy!", (5, 115))
+            write_text(self.font, self.screen, "Uruchomiono grę domyślną.", (5, 135))
+        elif self.message == 1:
+            write_text(self.font, self.screen, "Niepoprawna liczba min.", (5, 115))
+            write_text(self.font, self.screen, "Uruchomiono grę domyślną.", (5, 135))
+        elif self.message == 2:
+            write_text(self.font, self.screen, "Przegrałeś!", (155, 125))
+        elif self.message == 3:
+            write_text(self.font, self.screen, "Wygrałeś!", (157, 125))
 
-        game.display()
+        self.game.display()
+
+        pg.display.update()
 
     def event_handler(self, event):
         self.attributes = []
@@ -223,3 +261,20 @@ class Interface:
             box.event_handler(event)
 
         return self.attributes
+
+    def set_message(self, message):
+        self.message = message
+
+    def set_game(self, game):
+        self.message = None
+        self.game = game
+
+    def areTextBoxesEmpty(self):
+        counter = 0
+        for box in self.boxes:
+            if box.isEmpty():
+                counter += 1
+        if counter == len(self.boxes):
+            return True
+        else:
+            return False

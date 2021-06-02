@@ -1,5 +1,5 @@
 import numpy as np
-import interface
+from src import interface
 
 size_condition = lambda n, m: n > 15 or n < 2 or m > 15 or m < 2
 mines_condition = lambda mines, n, m: mines < 0 or mines > m * n
@@ -57,15 +57,19 @@ class InitializeNewGame:
         self.screen = screen
         self.color = color
         self.game_over = False
+        self.won = False
         self.cheat = False
+        self.message = None
         try:
             if size_condition(n, m):
                 raise IncorrectBoardSize
             elif mines_condition(mines, n, m):
                 raise IncorrectMinesValue
         except IncorrectBoardSize:
+            self.message = 0
             self.n, self.m, self.mines = default_board
         except IncorrectMinesValue:
+            self.message = 1
             self.n, self.m, self.mines = default_board
         else:
             self.n = n
@@ -87,7 +91,7 @@ class InitializeNewGame:
                 if self.fields[q][p].activation():
                     self.reveal_nearby(q, p)
 
-    def change_mines_color(self, color="red"):
+    def change_mines_color(self, color):
         for i, row in enumerate(self.fields):
             for j, field in enumerate(row):
                 if isinstance(field, interface.FieldWithMine):
@@ -100,12 +104,28 @@ class InitializeNewGame:
                     if isinstance(field, interface.FieldWithMine):
                         clicked = field.event_handler(event)
                         if clicked:
-                            self.change_mines_color()
+                            self.change_mines_color("red")
                             self.game_over = True
+                            self.message = 2
                     else:
                         is_empty = field.event_handler(event)
                         if is_empty:
                             self.reveal_nearby(i, j)
+                        self.check_win_condition()
+
+    def check_win_condition(self):
+        counter = 0
+        for row in self.fields:
+            for field in row:
+                if field.get_clicked() and not isinstance(field, interface.FieldWithMine):
+                    counter += 1
+        if counter == self.n * self.m - self.mines:
+            self.change_mines_color("green")
+            self.won = True
+            self.message = 3
+
+    def get_message(self):
+        return self.message
 
     def cheat(self):
         if not self.cheat:
