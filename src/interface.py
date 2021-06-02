@@ -130,7 +130,7 @@ class Button(FunctionalRectangle):
 class Field(FunctionalRectangle):
     def __init__(self, x, y, w, h, color=white):
         super().__init__(x, y, w, h, color)
-        self.activated = False
+        self.clicked = False
         self.border_mines = None
 
     def event_handler(self, event):
@@ -140,8 +140,8 @@ class Field(FunctionalRectangle):
         return False
 
     def activation(self):
-        if not self.activated:
-            self.activated = True
+        if not self.clicked:
+            self.clicked = True
             r, g, b = self.color
             self.color = (r + 30 if r <= 225 else 255, g + 30 if g <= 225 else 255, b + 30 if b <= 225 else 255)
             return self.border_mines == 0
@@ -149,7 +149,7 @@ class Field(FunctionalRectangle):
     def draw(self, screen, thickness=2, border=False):
         super(Field, self).draw(screen, thickness, border)
         font = pg.font.SysFont('timesnewroman.ttf', int(self.h // 1.5) if self.h <= self.w else int(self.w // 1.5))
-        if self.activated and self.border_mines != 0:
+        if self.clicked and self.border_mines != 0:
             write_text(font, screen, str(self.border_mines),
                        (self.rect.centerx - font.get_height() / 3, self.rect.centery - font.get_height() / 2))
 
@@ -163,9 +163,14 @@ class Field(FunctionalRectangle):
 class FieldWithMine(Field):
     def __init__(self, x, y, w, h, color=white):
         super().__init__(x, y, w, h, color)
+        self.activated = False
 
     def event_handler(self, event):
-        pass
+        if not self.activated:
+            if event.type == pg.MOUSEBUTTONDOWN:
+                if self.rect.collidepoint(event.pos):
+                    return True
+        return False
 
     def set_color(self, color):
         self.color = color

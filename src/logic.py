@@ -56,6 +56,7 @@ class InitializeNewGame:
     def __init__(self, n, m, mines, screen, color=white):
         self.screen = screen
         self.color = color
+        self.game_over = False
         self.cheat = False
         try:
             if size_condition(n, m):
@@ -86,12 +87,25 @@ class InitializeNewGame:
                 if self.fields[q][p].activation():
                     self.reveal_nearby(q, p)
 
-    def event_handler(self, event):
+    def change_mines_color(self, color="red"):
         for i, row in enumerate(self.fields):
             for j, field in enumerate(row):
-                is_empty = field.event_handler(event)
-                if is_empty:
-                    self.reveal_nearby(i, j)
+                if isinstance(field, interface.FieldWithMine):
+                    field.set_color(color)
+
+    def event_handler(self, event):
+        if not self.game_over:
+            for i, row in enumerate(self.fields):
+                for j, field in enumerate(row):
+                    if isinstance(field, interface.FieldWithMine):
+                        clicked = field.event_handler(event)
+                        if clicked:
+                            self.change_mines_color()
+                            self.game_over = True
+                    else:
+                        is_empty = field.event_handler(event)
+                        if is_empty:
+                            self.reveal_nearby(i, j)
 
     def cheat(self):
         if not self.cheat:

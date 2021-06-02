@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     background_color = (200, 200, 200)
     fields_color = (120, 60, 40)
-    screen = interface.set_window((395, 550), "Minesweeper", background_color)
+    screen = interface.set_window((395, 590), "Minesweeper", background_color)
     font = pg.font.SysFont('timesnewroman.ttf', 24)
     clock = pg.time.Clock()
 
