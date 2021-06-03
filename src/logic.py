@@ -57,8 +57,8 @@ class InitializeNewGame:
         self.screen = screen
         self.color = color
         self.game_over = False
-        self.won = False
         self.cheat = False
+        self.cheat_counter = 0
         self.message = None
         try:
             if size_condition(n, m):
@@ -97,6 +97,13 @@ class InitializeNewGame:
                 if isinstance(field, interface.FieldWithMine):
                     field.set_color(color)
 
+    def reset_mines_flag(self):
+        for i, row in enumerate(self.fields):
+            for j, field in enumerate(row):
+                if isinstance(field, interface.FieldWithMine):
+                    while field.get_right_clicks() != 0:
+                        field.right_click()
+
     def event_handler(self, event):
         if not self.game_over:
             for i, row in enumerate(self.fields):
@@ -104,6 +111,7 @@ class InitializeNewGame:
                     if isinstance(field, interface.FieldWithMine):
                         clicked = field.event_handler(event)
                         if clicked:
+                            self.reset_mines_flag()
                             self.change_mines_color("red")
                             self.game_over = True
                             self.message = 2
@@ -114,19 +122,48 @@ class InitializeNewGame:
                         self.check_win_condition()
 
     def check_win_condition(self):
-        counter = 0
+        counter_clicked = 0
+        counter_flags = 0
+        not_mine_clicked = True
         for row in self.fields:
             for field in row:
-                if field.get_clicked() and not isinstance(field, interface.FieldWithMine):
-                    counter += 1
-        if counter == self.n * self.m - self.mines:
+                if not isinstance(field, interface.FieldWithMine):
+                    if field.get_clicked():
+                        counter_clicked += 1
+                    elif field.get_right_clicks() == 1:
+                        not_mine_clicked = False
+                elif isinstance(field, interface.FieldWithMine) and field.get_right_clicks() == 1:
+                    counter_flags += 1
+        if counter_clicked == self.n * self.m - self.mines:
             self.change_mines_color("green")
-            self.won = True
+            self.game_over = True
             self.message = 3
+        elif not_mine_clicked and counter_flags == self.mines:
+            self.game_over = True
+            self.message = 3
+
+    def get_flags_count(self):
+        mine_flag_counter = 0
+        predicted_flag_counter = 0
+        for row in self.fields:
+            for field in row:
+                if field.get_right_clicks() == 1:
+                    mine_flag_counter += 1
+                elif field.get_right_clicks() == 2:
+                    predicted_flag_counter += 1
+        return mine_flag_counter, predicted_flag_counter
 
     def get_message(self):
         return self.message
 
-    def cheat(self):
+    def get_color(self):
+        return self.color
+
+    def get_mines(self):
+        return self.mines
+
+    def set_cheat(self):
         if not self.cheat:
             self.cheat = True
+            r, g, b = self.color
+            self.change_mines_color((r - 30 if r >= 30 else 0, g - 20 if g >= 20 else 0, b - 10 if b >= 10 else 0))

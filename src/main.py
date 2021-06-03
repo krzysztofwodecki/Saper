@@ -1,5 +1,21 @@
+import pygame as pg
+
+
+def cheats(key_counter, incoming_event):
+    if key_counter == 0 and pg.key.name(incoming_event.key) == "x":
+        key_counter = 1
+    elif key_counter == 1 and pg.key.name(incoming_event.key) == "y":
+        key_counter = 2
+    elif (key_counter == 2 or key_counter == 3) and pg.key.name(incoming_event.key) == "z":
+        key_counter += 1
+    elif key_counter == 4 and pg.key.name(incoming_event.key) == "y":
+        key_counter = 5
+    else:
+        key_counter = 0
+    return key_counter
+
+
 if __name__ == '__main__':
-    import pygame as pg
     from src import interface
     from src import logic
 
@@ -17,6 +33,7 @@ if __name__ == '__main__':
 
     display.display()
 
+    pressed_keys = 0
     running = True
     while running:
         attributes_list = []
@@ -24,6 +41,13 @@ if __name__ == '__main__':
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
+
+            if event.type == pg.KEYDOWN:
+                pressed_keys = cheats(pressed_keys, event)
+                if pressed_keys == 5:
+                    pressed_keys = 0
+                    game.set_cheat()
+                    display.display()
 
             if event_handler(event):
                 attributes_list = display.event_handler(event)
@@ -38,16 +62,6 @@ if __name__ == '__main__':
                 else:
                     display.display_nonstop(True)
 
-            # print(pg.event.event_name(event.type))
-            #
-            # if event.type == pg.K_x:
-            #     if pg.event.get() == pg.K_y:
-            #         if pg.event.get() == pg.K_z:
-            #             if pg.event.get() == pg.K_z:
-            #                 if pg.event.get() == pg.K_y:
-            #                     game.cheat()
-
-        print(clock.get_fps())
         clock.tick(60)
 
     pg.quit()

@@ -20,7 +20,7 @@ def set_window(size=(400, 400), title=" ", color=white):
     return screen
 
 
-def write_text(font, screen, text=" ", position=(0, 0), color=(0, 0, 0)):
+def write_text(font, screen, text=" ", position=(0, 0), color="black"):
     """
     Funkcja wypisująca zadany tekst w podanym miejscu.
     :param font: Używa wybranego przez nas fonta
@@ -33,7 +33,7 @@ def write_text(font, screen, text=" ", position=(0, 0), color=(0, 0, 0)):
     screen.blit(img, position)
 
 
-class FunctionalRectangle:
+class Rectangle:
     def __init__(self, x, y, w, h, color=white):
         self.x = x
         self.y = y
@@ -46,9 +46,8 @@ class FunctionalRectangle:
     def draw(self, screen, thickness=2, border=False):
         pg.draw.rect(screen, self.color, self.rect, thickness)
         if border:
-            for i in range(4):
-                pg.draw.rect(screen, black, (self.x - i, self.y - i,
-                                             self.w + 2, self.h + 2), 1)
+            pg.draw.rect(screen, black, (self.x - 1, self.y - 1,
+                                         self.w + 2, self.h + 2), 3)
 
     def get_x(self):
         return self.x
@@ -62,8 +61,11 @@ class FunctionalRectangle:
     def get_h(self):
         return self.h
 
+    def get_rect(self):
+        return self.rect
 
-class TextBox(FunctionalRectangle):
+
+class TextBox(Rectangle):
     def __init__(self, x, y, w, h, font, default_color=white):
         super().__init__(x, y, w, h, default_color)
         self.rect = pg.Rect(x, y, w, h)
@@ -112,7 +114,7 @@ class TextBox(FunctionalRectangle):
             return False
 
 
-class Button(FunctionalRectangle):
+class Button(Rectangle):
     def __init__(self, x, y, w, h, default_color=white):
         super().__init__(x, y, w, h, default_color)
 
@@ -133,11 +135,12 @@ class Button(FunctionalRectangle):
             return self.rect.collidepoint(event.pos)
 
 
-class Field(FunctionalRectangle):
+class Field(Rectangle):
     def __init__(self, x, y, w, h, color=white):
         super().__init__(x, y, w, h, color)
         self.clicked = False
         self.border_mines = None
+        self.right_clicks = 0
 
     def event_handler(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
@@ -146,7 +149,7 @@ class Field(FunctionalRectangle):
                 if left:
                     return self.activation()
                 if right:
-                    pass
+                    self.right_click()
         return False
 
     def activation(self):
@@ -162,12 +165,24 @@ class Field(FunctionalRectangle):
         if self.clicked and self.border_mines != 0:
             write_text(font, screen, str(self.border_mines),
                        (self.rect.centerx - font.get_height() / 3, self.rect.centery - font.get_height() / 2))
+        elif self.right_clicks == 1 and not self.clicked:
+            pg.draw.line(screen, (0, 0, 0), self.rect.bottomleft, self.rect.topright, 3)
+            pg.draw.line(screen, (0, 0, 0), self.rect.bottomright, self.rect.topleft, 3)
+        elif self.right_clicks == 2 and not self.clicked:
+            write_text(font, screen, "?",
+                       (self.rect.centerx - font.get_height() / 3, self.rect.centery - font.get_height() / 2))
 
     def set_border_mines(self, border_mines):
         self.border_mines = border_mines
 
     def get_clicked(self):
         return self.clicked
+
+    def right_click(self):
+        self.right_clicks = (self.right_clicks + 1) % 3
+
+    def get_right_clicks(self):
+        return self.right_clicks
 
     def __repr__(self):
         return "Brak miny"
@@ -176,17 +191,16 @@ class Field(FunctionalRectangle):
 class FieldWithMine(Field):
     def __init__(self, x, y, w, h, color=white):
         super().__init__(x, y, w, h, color)
-        self.activated = False
 
     def event_handler(self, event):
-        if not self.activated:
+        if not self.clicked:
             if event.type == pg.MOUSEBUTTONDOWN:
                 if self.rect.collidepoint(event.pos):
                     left, _, right = pg.mouse.get_pressed(3)
                     if left:
                         return True
                     if right:
-                        pass
+                        super().right_click()
         return False
 
     def set_color(self, color):
@@ -209,6 +223,8 @@ class Interface:
                       TextBox(5, 73, 115, 25, font)]
         self.message = None
         self.button = Button(295, 5, 95, 95, (200, 245, 200))
+        self.properties = [Rectangle(5, 550, 35, 35, "red"), Rectangle(135, 550, 35, 35, self.game.get_color()),
+                           Rectangle(265, 550, 35, 35, self.game.get_color())]
         self.attributes = []
 
     def display_nonstop(self, update=False):
@@ -244,6 +260,23 @@ class Interface:
             write_text(self.font, self.screen, "Przegrałeś!", (155, 125))
         elif self.message == 3:
             write_text(self.font, self.screen, "Wygrałeś!", (157, 125))
+
+        for prop in self.properties:
+            prop.draw(self.screen, 0, True)
+
+        rect_mine = self.properties[1].get_rect()
+        pg.draw.line(self.screen, (0, 0, 0), rect_mine.bottomleft, rect_mine.topright, 3)
+        pg.draw.line(self.screen, (0, 0, 0), rect_mine.bottomright, rect_mine.topleft, 3)
+
+        rect_mine = self.properties[2].get_rect()
+        write_text(self.font, self.screen, "?",
+                   (rect_mine.centerx - self.font.get_height() / 3.6,
+                    rect_mine.centery - self.font.get_height() / 2.4))
+
+        flags = self.game.get_flags_count()
+        write_text(self.font, self.screen, ": " + str(self.game.get_mines()), (45, 560))
+        write_text(self.font, self.screen, ": " + str(flags[0]), (175, 560))
+        write_text(self.font, self.screen, ": " + str(flags[1]), (305, 560))
 
         self.game.display()
 
