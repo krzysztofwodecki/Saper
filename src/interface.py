@@ -189,7 +189,7 @@ class Field(Rectangle):
         font = pg.font.SysFont('timesnewroman.ttf', int(self._h // 1.5) if self._h <= self._w else int(self._w // 1.5))
 
         # Wyświetla cyfrę min w sąsiedztwie miny, jeżeli aktywowane
-        if self._clicked and self._border_mines != 0:
+        if self._clicked and self._border_mines != 0 and not isinstance(self, FieldWithMine):
             write_text(font, screen, str(self._border_mines),
                        (self._rect.centerx - font.get_height() / 3, self._rect.centery - font.get_height() / 2))
 
@@ -229,10 +229,13 @@ class FieldWithMine(Field):
                 if self._rect.collidepoint(event.pos):
                     left, _, right = pg.mouse.get_pressed(3)
                     if left:
-                        return True
+                        self.left_click()
                     if right:
                         super().right_click()
         return False
+
+    def left_click(self):
+        self._clicked = True
 
     def set_color(self, color):
         self._color = color

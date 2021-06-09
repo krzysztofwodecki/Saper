@@ -7,7 +7,7 @@ mines_condition = lambda mines, n, m: mines < 0 or mines > m * n
 
 # Domyślna plansza
 default_board = (6, 6, 4)
-
+white = (255, 255, 255)
 
 def create_field_arrays(n, m, mines, color="white"):
     """
@@ -81,7 +81,7 @@ class Game:
     """
     Klasa definiująca logiczną część gry.
     """
-    def __init__(self, n, m, mines, screen, color="white"):
+    def __init__(self, n, m, mines, screen=None, color=white):
         self._screen = screen
         self._color = color
         self._game_over = False
@@ -159,12 +159,8 @@ class Game:
                 for j, field in enumerate(row):
                     if isinstance(field, interface.FieldWithMine):
                         # W wypadku, gdy kliknięte pole jest miną gra się kończy.
-                        clicked = field.event_handler(event)
-                        if clicked:
-                            self.reset_mines_flag()
-                            self.change_mines_color("red")
-                            self._game_over = True
-                            self._message = 2
+                        field.event_handler(event)
+                        self.check_lose_condition()
                     else:
                         # W momencie, gdy kliknięte pole nie jest miną sprawdzane jest czy sąsiaduje z polami z miną.
                         # Jeśli tak to nie dzieje się nic, jeśli nie to odkrywane są pola sąsiadujące.
@@ -173,6 +169,19 @@ class Game:
                         if is_empty:
                             self.reveal_nearby(i, j)
                         self.check_win_condition()
+
+    def check_lose_condition(self):
+        click_count = 0
+        for i, row in enumerate(self._fields):
+            for j, field in enumerate(row):
+                if isinstance(field, interface.FieldWithMine):
+                    if field.get_clicked():
+                        click_count += 1
+        if click_count > 0:
+            self.reset_mines_flag()
+            self.change_mines_color("red")
+            self._game_over = True
+            self._message = 2
 
     def check_win_condition(self):
         """
@@ -217,8 +226,14 @@ class Game:
                     predicted_flag_counter += 1
         return mine_flag_counter, predicted_flag_counter
 
+    def get_field(self, i, j):
+        return self._fields[i][j]
+
     def get_message(self):
         return self._message
+
+    def get_game_over(self):
+        return self._game_over
 
     def get_color(self):
         return self._color
