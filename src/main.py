@@ -21,8 +21,8 @@ def cheats(key_counter, incoming_event):
 
 if __name__ == '__main__':
     import pygame as pg
-    from src import interface
-    from src import logic
+    import interface
+    import logic
 
     # Zdefiniowane podstawowe elementy
     background_color = (200, 200, 200)

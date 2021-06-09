@@ -1,5 +1,5 @@
 import numpy as np
-from src import interface
+import interface
 
 # Wyrażenia lambda decydujące o dopuszczalnych rozmiarach planszy czy liczby min
 size_condition = lambda n, m: n > 15 or n < 2 or m > 15 or m < 2

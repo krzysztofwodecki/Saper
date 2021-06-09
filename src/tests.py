@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from src import logic
-from src import interface
+import logic
+import interface
 
 
 class StartNewGame(unittest.TestCase):
