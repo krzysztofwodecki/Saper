@@ -107,19 +107,19 @@ class Game:
             # Niepoprawna liczba min. Ustawia odpowiednią wiadomość do wysłania do interfejsu.
             self.__message = 1
         else:
-            self._n = n
-            self._m = m
-            self._mines = mines
-            self._fields = create_field_arrays(self._n, self._m, self._mines, self.__color)
-            self._border_values = border_values(self._n, self._m, self._fields)
+            self.__n = n
+            self.__m = m
+            self.__mines = mines
+            self.__fields = create_field_arrays(self.__n, self.__m, self.__mines, self.__color)
+            self.__border_values = border_values(self.__n, self.__m, self.__fields)
 
     def display(self):
         """
         Metoda wywołująca dla każdego pola z macierzy pól metodę draw.
         """
-        for i, row in enumerate(self._fields):
+        for i, row in enumerate(self.__fields):
             for j, field in enumerate(row):
-                field.set_border_mines(self._border_values[i][j])
+                field.set_border_mines(self.__border_values[i][j])
                 field.draw(self.__screen, 0, True)
 
     def reveal_nearby(self, i, j):
@@ -128,9 +128,9 @@ class Game:
         :param i: pozycja x pola
         :param j: pozycja y pola
         """
-        for q in range(i - 1 if i > 0 else 0, i + 2 if i + 2 <= self._m else i + 1):
-            for p in range(j - 1 if j > 0 else 0, j + 2 if j + 2 <= self._n else j + 1):
-                if self._fields[q][p].activation():
+        for q in range(i - 1 if i > 0 else 0, i + 2 if i + 2 <= self.__m else i + 1):
+            for p in range(j - 1 if j > 0 else 0, j + 2 if j + 2 <= self.__n else j + 1):
+                if self.__fields[q][p].activation():
                     self.reveal_nearby(q, p)
 
     def change_mines_color(self, color):
@@ -138,7 +138,7 @@ class Game:
         Metoda zmieniająca kolor min. Przydatna w momencie pokazania wygranej, przegranej, bądź wykorzystania kodu.
         :param color: na jaki kolor chcemy zmienić
         """
-        for i, row in enumerate(self._fields):
+        for i, row in enumerate(self.__fields):
             for j, field in enumerate(row):
                 if isinstance(field, interface.FieldWithMine):
                     field.set_color(color)
@@ -147,7 +147,7 @@ class Game:
         """
         Metoda resetująca flagi dla pól z minami.
         """
-        for i, row in enumerate(self._fields):
+        for i, row in enumerate(self.__fields):
             for j, field in enumerate(row):
                 if isinstance(field, interface.FieldWithMine):
                     field.set_right_clicks(0)
@@ -158,7 +158,7 @@ class Game:
         :param event: przychodzące wydarzenie
         """
         if not self.__game_over:
-            for i, row in enumerate(self._fields):
+            for i, row in enumerate(self.__fields):
                 for j, field in enumerate(row):
                     if isinstance(field, interface.FieldWithMine):
                         # W wypadku, gdy kliknięte pole jest miną gra się kończy.
@@ -180,7 +180,7 @@ class Game:
         Metoda sprawdzająca czy gracz przegrał.
         """
         click_count = 0
-        for i, row in enumerate(self._fields):
+        for i, row in enumerate(self.__fields):
             for j, field in enumerate(row):
                 if isinstance(field, interface.FieldWithMine):
                     if field.get_clicked():
@@ -198,7 +198,7 @@ class Game:
         counter_clicked = 0
         counter_flags = 0
         not_mine_clicked = True
-        for row in self._fields:
+        for row in self.__fields:
             for field in row:
                 if not isinstance(field, interface.FieldWithMine):
                     if field.get_clicked():
@@ -208,13 +208,13 @@ class Game:
                 elif isinstance(field, interface.FieldWithMine) and field.get_right_clicks() == 1:
                     counter_flags += 1
 
-        if counter_clicked == self._n * self._m - self._mines:
+        if counter_clicked == self.__n * self.__m - self.__mines:
             # Wariant z kliknięciem wszystkich pól niebędących minami
             self.change_mines_color("green")
             self.reset_mines_flag()
             self.__game_over = True
             self.__message = 3
-        elif not_mine_clicked and counter_flags == self._mines:
+        elif not_mine_clicked and counter_flags == self.__mines:
             # Wariant z zaznaczeniem flagami wszystkich pól z minami
             self.__game_over = True
             self.__message = 3
@@ -226,7 +226,7 @@ class Game:
         """
         mine_flag_counter = 0
         predicted_flag_counter = 0
-        for row in self._fields:
+        for row in self.__fields:
             for field in row:
                 if field.get_right_clicks() == 1:
                     mine_flag_counter += 1
@@ -235,7 +235,7 @@ class Game:
         return mine_flag_counter, predicted_flag_counter
 
     def get_field(self, i, j):
-        return self._fields[i][j]
+        return self.__fields[i][j]
 
     def get_message(self):
         return self.__message
@@ -247,7 +247,7 @@ class Game:
         return self.__color
 
     def get_mines(self):
-        return self._mines
+        return self.__mines
 
     def set_cheat(self):
         """
