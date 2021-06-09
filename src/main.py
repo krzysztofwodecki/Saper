@@ -1,6 +1,3 @@
-import pygame as pg
-
-
 def cheats(key_counter, incoming_event):
     """
     Funkcja testująca przychodzące wydarzenie z klawiatury tak, aby odczytać kombinację "xyzzy".
@@ -23,6 +20,7 @@ def cheats(key_counter, incoming_event):
 
 
 if __name__ == '__main__':
+    import pygame as pg
     from src import interface
     from src import logic
 

@@ -361,17 +361,17 @@ class Interface:
         :param game: gra, z którą zaczynamy
         :param background_color: kolor tła
         """
-        self._screen = screen
-        self._font = font
-        self._game = game
-        self._background_color = background_color
-        self._boxes = [TextBox(5, 23, 45, 25, font), TextBox(75, 23, 45, 25, font),
-                       TextBox(5, 73, 115, 25, font)]
-        self._message = None
-        self._button = Button(295, 5, 95, 95, (200, 245, 200))
-        self._properties = [Rectangle(5, 550, 35, 35, "red"), Rectangle(135, 550, 35, 35, self._game.get_color()),
-                            Rectangle(265, 550, 35, 35, self._game.get_color())]
-        self._attributes = []
+        self.__screen = screen
+        self.__font = font
+        self.__game = game
+        self.__background_color = background_color
+        self.__boxes = [TextBox(5, 23, 45, 25, font), TextBox(75, 23, 45, 25, font),
+                        TextBox(5, 73, 115, 25, font)]
+        self.__message = None
+        self.__button = Button(295, 5, 95, 95, (200, 245, 200))
+        self.__properties = [Rectangle(5, 550, 35, 35, "red"), Rectangle(135, 550, 35, 35, self.__game.get_color()),
+                             Rectangle(265, 550, 35, 35, self.__game.get_color())]
+        self.__attributes = []
 
     def display_nonstop(self, update=False):
         """
@@ -380,11 +380,11 @@ class Interface:
         odświeżyć ekran czy jeszcze nie.
         :param update: czy metoda ma odświeżyć ekran
         """
-        for box in self._boxes:
-            box.draw(self._screen)
+        for box in self.__boxes:
+            box.draw(self.__screen)
 
-        self._button.highlight(self._screen)
-        pg.draw.polygon(self._screen, (0, 220, 0), [(325, 27), (325, 77), (365, 50)])
+        self.__button.highlight(self.__screen)
+        pg.draw.polygon(self.__screen, (0, 220, 0), [(325, 27), (325, 77), (365, 50)])
 
         if update:
             pg.display.update()
@@ -393,48 +393,48 @@ class Interface:
         """
         Metoda wyświetlająca cały ekran od nowa, odświeżająca go.
         """
-        self._screen.fill(self._background_color)
+        self.__screen.fill(self.__background_color)
 
-        write_text(self._font, self._screen, "Rozmiar planszy:", (5, 5))
-        write_text(self._font, self._screen, "Liczba min:", (5, 55))
-        write_text(self._font, self._screen, "x", (59, 27))
+        write_text(self.__font, self.__screen, "Rozmiar planszy:", (5, 5))
+        write_text(self.__font, self.__screen, "Liczba min:", (5, 55))
+        write_text(self.__font, self.__screen, "x", (59, 27))
 
         self.display_nonstop()
 
-        pg.draw.line(self._screen, (0, 0, 0), (0, 105), (400, 105), 2)
+        pg.draw.line(self.__screen, (0, 0, 0), (0, 105), (400, 105), 2)
 
         # Wyświetlanie komunikatów do gracza o problemach, bądź rezultacie rozgrywki
-        if self._message == 0:
-            write_text(self._font, self._screen, "Niepoprawny rozmiar planszy!", (5, 115))
-        elif self._message == 1:
-            write_text(self._font, self._screen, "Niepoprawna liczba min.", (5, 115))
-        if self._message == 2:
-            write_text(self._font, self._screen, "Przegrałeś!", (155, 125))
-        elif self._message == 3:
-            write_text(self._font, self._screen, "Wygrałeś!", (157, 125))
+        if self.__message == 0:
+            write_text(self.__font, self.__screen, "Niepoprawny rozmiar planszy!", (5, 115))
+        elif self.__message == 1:
+            write_text(self.__font, self.__screen, "Niepoprawna liczba min.", (5, 115))
+        if self.__message == 2:
+            write_text(self.__font, self.__screen, "Przegrałeś!", (155, 125))
+        elif self.__message == 3:
+            write_text(self.__font, self.__screen, "Wygrałeś!", (157, 125))
 
         # Ikony liczby min i flag
-        for prop in self._properties:
-            prop.draw(self._screen, 0, True)
+        for prop in self.__properties:
+            prop.draw(self.__screen, 0, True)
 
         # X w liczbie flag
-        rect_mine = self._properties[1].rect
-        pg.draw.line(self._screen, (0, 0, 0), rect_mine.bottomleft, rect_mine.topright, 3)
-        pg.draw.line(self._screen, (0, 0, 0), rect_mine.bottomright, rect_mine.topleft, 3)
+        rect_mine = self.__properties[1].rect
+        pg.draw.line(self.__screen, (0, 0, 0), rect_mine.bottomleft, rect_mine.topright, 3)
+        pg.draw.line(self.__screen, (0, 0, 0), rect_mine.bottomright, rect_mine.topleft, 3)
 
         # Pytajnik w liczbie flag
-        rect_mine = self._properties[2].rect
-        write_text(self._font, self._screen, "?",
-                   (rect_mine.centerx - self._font.get_height() / 3.6,
-                    rect_mine.centery - self._font.get_height() / 2.4))
+        rect_mine = self.__properties[2].rect
+        write_text(self.__font, self.__screen, "?",
+                   (rect_mine.centerx - self.__font.get_height() / 3.6,
+                    rect_mine.centery - self.__font.get_height() / 2.4))
 
         # Liczby flag
-        flags = self._game.get_flags_count()
-        write_text(self._font, self._screen, ": " + str(self._game.get_mines()), (45, 560))
-        write_text(self._font, self._screen, ": " + str(flags[0]), (175, 560))
-        write_text(self._font, self._screen, ": " + str(flags[1]), (305, 560))
+        flags = self.__game.get_flags_count()
+        write_text(self.__font, self.__screen, ": " + str(self.__game.get_mines()), (45, 560))
+        write_text(self.__font, self.__screen, ": " + str(flags[0]), (175, 560))
+        write_text(self.__font, self.__screen, ": " + str(flags[1]), (305, 560))
 
-        self._game.display()
+        self.__game.display()
         pg.display.update()
 
     def event_handler(self, event):
@@ -444,41 +444,41 @@ class Interface:
         :param event: przychodzące wydarzenie
         :return: wartości rozmiaru planszy oraz liczby min odczytane po wciśnięciu nowej rozgrywki
         """
-        self._attributes = []
-        if self._button.event_handler(event):
-            for box in self._boxes:
+        self.__attributes = []
+        if self.__button.event_handler(event):
+            for box in self.__boxes:
                 if box.get_value() >= 0:
-                    self._attributes.append(box.get_value())
+                    self.__attributes.append(box.get_value())
                 box.clear()
 
-        for box in self._boxes:
+        for box in self.__boxes:
             box.event_handler(event)
 
-        return self._attributes
+        return self.__attributes
 
     def set_message(self, message):
-        self._message = message
+        self.__message = message
 
     def get_message(self):
-        return self._message
+        return self.__message
 
     def set_game(self, game):
         """
         Setter ustawiający nową grę
         :param game: nowa gra
         """
-        self._game = game
-        self._message = self._game.get_message()
+        self.__game = game
+        self.__message = self.__game.get_message()
 
     def areTextBoxesEmpty(self):
         """
         Metoda sprawdzająca czy pola do wpisywania danych są puste.
         """
         counter = 0
-        for box in self._boxes:
+        for box in self.__boxes:
             if box.isEmpty():
                 counter += 1
-        if counter == len(self._boxes):
+        if counter == len(self.__boxes):
             return True
         else:
             return False
