@@ -162,15 +162,16 @@ class Field(Rectangle):
         self._right_clicks = 0
 
     def event_handler(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if self._rect.collidepoint(event.pos):
-                left, _, right = pg.mouse.get_pressed(3)
-                # Aktywacja pola
-                if left:
-                    return self.activation()
-                # Ustawienie flagi na polu
-                if right:
-                    self.right_click()
+        if not self._clicked:
+            if event.type == pg.MOUSEBUTTONDOWN:
+                if self._rect.collidepoint(event.pos):
+                    left, _, right = pg.mouse.get_pressed(3)
+                    # Aktywacja pola
+                    if left:
+                        return self.activation()
+                    # Ustawienie flagi na polu
+                    if right:
+                        self.right_click()
         return False
 
     def activation(self):
@@ -210,10 +211,14 @@ class Field(Rectangle):
         return self._clicked
 
     def right_click(self):
-        self._right_clicks = (self._right_clicks + 1) % 3
+        if not self._clicked:
+            self._right_clicks = (self._right_clicks + 1) % 3
 
     def get_right_clicks(self):
         return self._right_clicks
+
+    def get_color(self):
+        return self._color
 
     def __repr__(self):
         return "Brak miny"
@@ -239,9 +244,6 @@ class FieldWithMine(Field):
 
     def set_color(self, color):
         self._color = color
-
-    def get_color(self):
-        return self._color
 
     def __repr__(self):
         return "Mina"
