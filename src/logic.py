@@ -11,7 +11,7 @@ white = (255, 255, 255)
 
 def create_field_arrays(n, m, mines, color=white):
     """
-    Funckja tworząca plansze pod postacią macierzy pól zarówno z jak i bez min. Funkcja korzysta z biblioteki numpy
+    Funkcja tworząca plansze pod postacią macierzy pól zarówno z jak i bez min. Funkcja korzysta z biblioteki numpy
     celem optymalizacji czasu pracy oraz potrzeby wykorzystania bardziej zaawansowanych wariantów generatora range()
     i funkcji generujących liczby pseudolosowe.
     :param n: pierwszy rozmiar planszy
@@ -64,7 +64,7 @@ def count_mines_nearby(n, m, mines_array, i, j):
     :return:
     """
     return np.sum(np.array([[1 if isinstance(mines_array[q][p], interface.FieldWithMine) else 0
-                            for p in range(j - 1 if j > 0 else 0, j + 2 if j + 2 <= n else j + 1)]
+                             for p in range(j - 1 if j > 0 else 0, j + 2 if j + 2 <= n else j + 1)]
                             for q in range(i - 1 if i > 0 else 0, i + 2 if i + 2 <= m else i + 1)]))
 
 
@@ -86,6 +86,7 @@ class Game:
     """
     Klasa definiująca logiczną część gry.
     """
+
     def __init__(self, n, m, mines, screen=None, color=white):
         self.__screen = screen
         self.__color = color
