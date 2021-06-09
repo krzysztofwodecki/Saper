@@ -1,6 +1,4 @@
 from abc import abstractmethod, ABC
-
-
 import pygame as pg
 
 black = (0, 0, 0)
