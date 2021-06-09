@@ -1,3 +1,6 @@
+from abc import abstractmethod, ABC
+
+
 import pygame as pg
 
 black = (0, 0, 0)
@@ -40,131 +43,212 @@ class Rectangle:
     """
 
     def __init__(self, x, y, w, h, color=white):
-        self._x = x
-        self._y = y
-        self._w = w
-        self._h = h
-        self._rect = pg.Rect(x, y, w, h)
-        self._default_color = color
-        self._color = color
+        self.__x = x
+        self.__y = y
+        self.__w = w
+        self.__h = h
+        self.__rect = pg.Rect(x, y, w, h)
+        self.__default_color = color
+        self.__color = color
 
     def draw(self, screen, thickness=0, border=False):
         """
         Funkcja rysująca na ekranie zdefiniowany prostokąt, wraz z możliwością dodania obramowania oraz wyboru
         grubości prostokąta.
         """
-        pg.draw.rect(screen, self._color, self._rect, thickness)
+        pg.draw.rect(screen, self.color, self.__rect, thickness)
         if border:
-            pg.draw.rect(screen, black, (self._x - 1, self._y - 1,
-                                         self._w + 2, self._h + 2), 3)
+            pg.draw.rect(screen, black, (self.__x - 1, self.__y - 1,
+                                         self.__w + 2, self.__h + 2), 3)
 
-    def get_x(self):
-        return self._x
+    @abstractmethod
+    def event_handler(self, event):
+        raise NotImplementedError()
 
-    def get_y(self):
-        return self._y
+    @abstractmethod
+    def activation(self):
+        raise NotImplementedError()
 
-    def get_w(self):
-        return self._w
+    @property
+    def x(self):
+        return self.__x
 
-    def get_h(self):
-        return self._h
+    @property
+    def y(self):
+        return self.__y
 
-    def get_rect(self):
-        return self._rect
+    @property
+    def w(self):
+        return self.__w
+
+    @property
+    def h(self):
+        return self.__h
+
+    @property
+    def rect(self):
+        return self.__rect
+
+    @property
+    def default_color(self):
+        return self.__default_color
+
+    @property
+    def color(self):
+        return self.__color
+
+    @color.setter
+    def color(self, color):
+        self.__color = color
 
 
-class TextBox(Rectangle):
+class TextBox(Rectangle, ABC):
     """
     Klasa tworząca interaktywne pole do wpisywania tekstu.
     """
 
     def __init__(self, x, y, w, h, font, default_color=white):
+        """
+        Konstruktor nowego pola.
+        :param x: położenie x pola
+        :param y: położenie y pola
+        :param w: szerokość pola
+        :param h: wysokość pola
+        :param font: font, którym sie pole będzie posługiwać
+        :param default_color: podstawowy kolor obramowania pola tekstowego
+        """
         super().__init__(x, y, w, h, default_color)
-        self._text = ""
-        self._font = font
-        self._txt_surface = font.render(self._text, True, self._color)
-        self._active = False
+        self.__text = ""
+        self.__font = font
+        self.__txt_surface = font.render(self.__text, True, self.color)
+        self.__active = False
 
     def event_handler(self, event):
+        """
+        Event handler dla pola tekstowego.
+        :param event: przychodzące wydarzenie
+        """
         # Event zaznaczenia danego pola
         if event.type == pg.MOUSEBUTTONDOWN:
-            if self._rect.collidepoint(event.pos):
-                self._active = not self._active
+            if self.rect.collidepoint(event.pos):
+                self.__active = not self.__active
             else:
-                self._active = False
-            self._color = (0, 0, 0) if self._active else self._default_color
+                self.__active = False
+            self.color = (0, 0, 0) if self.__active else self.default_color
 
         # Event wpisywania tekstu do pola
         if event.type == pg.KEYDOWN:
-            if self._active:
+            if self.__active:
                 if event.key == pg.K_BACKSPACE:
-                    self._text = self._text[:-1]
+                    self.__text = self.__text[:-1]
                 elif event.key in [pg.K_0, pg.K_1, pg.K_2, pg.K_3, pg.K_4,
                                    pg.K_5, pg.K_6, pg.K_7, pg.K_8, pg.K_9]:
-                    self._text += event.unicode
-                    if len(self._text) > self._w // 10:
-                        self._text = self._text[:-1]
-                self._txt_surface = self._font.render(self._text, True, self._color)
+                    self.__text += event.unicode
+                    if len(self.__text) > self.w // 10:
+                        self.__text = self.__text[:-1]
+                self.__txt_surface = self.__font.render(self.__text, True, self.color)
 
     def draw(self, screen, thickness=2, border=False):
-        screen.blit(self._txt_surface, (self._rect.x + 5, self._rect.y + 5))
+        """
+        Metoda wyświetlająca pole tekstowe na ekranie.
+        :param screen: ekran
+        :param thickness: grubość krawędzi pola
+        :param border: czy ma rysować dodatkowe krawędzie
+        """
+        screen.blit(self.__txt_surface, (self.rect.x + 5, self.rect.y + 5))
         super().draw(screen, thickness, False)
 
     def get_value(self):
+        """
+        Parser z wpisywanego stringa w pole tekstowe na int.
+        :return: wartość po parsowaniu
+        """
         try:
-            value = int(self._text)
+            value = int(self.__text)
         except ValueError:
-            value = 0
+            value = -1
         return value
 
     def clear(self):
-        self._text = ""
-        self._txt_surface = self._font.render(self._text, True, self._color)
+        """
+        Metoda czyści pole tekstowe.
+        """
+        self.__text = ""
+        self.__txt_surface = self.__font.render(self.__text, True, self.color)
 
     def isEmpty(self):
-        if len(self._text) == 0:
+        """
+        Metoda zwraca czy pole jest puste.
+        :return: czy pole jest puste
+        """
+        if len(self.__text) == 0:
             return True
         else:
             return False
 
 
-class Button(Rectangle):
+class Button(Rectangle, ABC):
     """
     Klasa definiująca duży przycisk służący do zaczęcia nowej gry.
     """
+
     def highlight(self, screen, thickness=0):
+        """
+        Metoda realizująca podświetlenie przycisku zaczęcia nowej gry, gdy się na nią najedzie. Daje to poczucie
+        interaktywności przycisku.
+        :param screen: ekran
+        :param thickness: grubość ścianek domyślnie wypełnienie
+        """
         mouse = pg.mouse.get_pos()
 
         # Odczyt pozycji myszki i ustalenie czy przycisk ma się podświetlić
-        if self._rect.x <= mouse[0] <= self._rect.x + self._rect.w \
-                and self._rect.y <= mouse[1] <= self._rect.y + self._rect.h:
-            a, b, c = self._default_color
-            self._color = (a + 10 if a < 245 else 255, b + 10 if b < 245 else 255, c + 10 if c < 245 else 255)
+        if self.rect.x <= mouse[0] <= self.rect.x + self.rect.w \
+                and self.rect.y <= mouse[1] <= self.rect.y + self.rect.h:
+            a, b, c = self.default_color
+            self.color = (a + 10 if a < 245 else 255, b + 10 if b < 245 else 255, c + 10 if c < 245 else 255)
         else:
-            self._color = self._default_color
+            self.color = self.default_color
 
         super().draw(screen, thickness, True)
 
     def event_handler(self, event):
+        """
+        Event handler dla wciśnięcia guzika.
+        :param event: przychodzące wydarzenie
+        :return: bool czy kliknięte w guzik czy nie
+        """
         if event.type == pg.MOUSEBUTTONDOWN:
-            return self._rect.collidepoint(event.pos)
+            return self.rect.collidepoint(event.pos)
 
 
 class Field(Rectangle):
     """
     Klasa definiująca podstawowy element gry, czyli pole, ale bez miny.
     """
+
     def __init__(self, x, y, w, h, color=white):
+        """
+        Konstruktor nowego pola.
+        :param x: położenie x pola
+        :param y: położenie y pola
+        :param w: szerokość pola
+        :param h: wysokośc pola
+        :param color: kolor
+        """
         super().__init__(x, y, w, h, color)
-        self._clicked = False
-        self._border_mines = None
-        self._right_clicks = 0
+        self.__clicked = False
+        self.__border_mines = None
+        self.__right_clicks = 0
 
     def event_handler(self, event):
-        if not self._clicked:
+        """
+        Event handler dla pól bez min.
+        :param event: przychodzące wydarzenie
+        :return: bool: czy aktywowane pole graniczy z jakąś miną
+        """
+        if not self.__clicked:
             if event.type == pg.MOUSEBUTTONDOWN:
-                if self._rect.collidepoint(event.pos):
+                if self.rect.collidepoint(event.pos):
                     left, _, right = pg.mouse.get_pressed(3)
                     # Aktywacja pola
                     if left:
@@ -179,46 +263,62 @@ class Field(Rectangle):
         Metoda aktywująca pole pod warunkiem, że już nie zostało aktywowane.
         :return: true - pole nie graniczy z żadną miną; false - pole graniczy z jakąkolwiek miną
         """
-        if not self._clicked:
-            self._clicked = True
-            r, g, b = self._color
-            self._color = (r + 30 if r < 225 else 255, g + 30 if g < 225 else 255, b + 30 if b < 225 else 255)
-            return self._border_mines == 0
+        if not self.__clicked:
+            self.__clicked = True
+            r, g, b = self.color
+            self.color = (r + 30 if r < 225 else 255, g + 30 if g < 225 else 255, b + 30 if b < 225 else 255)
+            return self.__border_mines == 0
 
-    def draw(self, screen, thickness=2, border=False):
+    def draw(self, screen, thickness=0, border=False):
+        """
+        Metoda rysująca pole oraz rysująca na nim znaki czy cyfry min dookoła.
+        :param screen: ekran, na którym ma rysować
+        :param thickness: grubość ścianek prostokąta, domyślnie zero co jest wypełnieniem
+        :param border: czy rysować otoczkę dookoła
+        """
         super().draw(screen, thickness, border)
-        font = pg.font.SysFont('timesnewroman.ttf', int(self._h // 1.5) if self._h <= self._w else int(self._w // 1.5))
+        font = pg.font.SysFont('timesnewroman.ttf', int(self.h // 1.5) if self.h <= self.w else int(self.w // 1.5))
 
         # Wyświetla cyfrę min w sąsiedztwie miny, jeżeli aktywowane
-        if self._clicked and self._border_mines != 0 and not isinstance(self, FieldWithMine):
-            write_text(font, screen, str(self._border_mines),
-                       (self._rect.centerx - font.get_height() / 3, self._rect.centery - font.get_height() / 2))
+        if self.__clicked and self.__border_mines != 0 and not isinstance(self, FieldWithMine):
+            write_text(font, screen, str(self.__border_mines),
+                       (self.rect.centerx - font.get_height() / 3, self.rect.centery - font.get_height() / 2))
 
         # Wyświetla X jako flagę "Tu jest mina", jeśli pole nieaktywowane
-        elif self._right_clicks == 1 and not self._clicked:
-            pg.draw.line(screen, (0, 0, 0), self._rect.bottomleft, self._rect.topright, 3)
-            pg.draw.line(screen, (0, 0, 0), self._rect.bottomright, self._rect.topleft, 3)
+        elif self.__right_clicks == 1 and not self.__clicked:
+            pg.draw.line(screen, (0, 0, 0), self.rect.bottomleft, self.rect.topright, 3)
+            pg.draw.line(screen, (0, 0, 0), self.rect.bottomright, self.rect.topleft, 3)
 
         # Wyświetla ? jako flagę "Tu może być mina", jeśli pole nieaktywowane
-        elif self._right_clicks == 2 and not self._clicked:
+        elif self.__right_clicks == 2 and not self.__clicked:
             write_text(font, screen, "?",
-                       (self._rect.centerx - font.get_height() / 3, self._rect.centery - font.get_height() / 2))
+                       (self.rect.centerx - font.get_height() / 3, self.rect.centery - font.get_height() / 2))
 
     def set_border_mines(self, border_mines):
-        self._border_mines = border_mines
+        self.__border_mines = border_mines
 
     def get_clicked(self):
-        return self._clicked
+        return self.__clicked
+
+    def left_click(self):
+        self.__clicked = True
 
     def right_click(self):
-        if not self._clicked:
-            self._right_clicks = (self._right_clicks + 1) % 3
+        """
+        Metoda zmieniająca stan pola ze trzech możliwych: podstawowego,
+        z flagą "Tu jest mina" i z flagą "Tu może być mina".
+        """
+        if not self.__clicked:
+            self.__right_clicks = (self.__right_clicks + 1) % 3
+
+    def set_right_clicks(self, value):
+        self.__right_clicks = value % 3
 
     def get_right_clicks(self):
-        return self._right_clicks
+        return self.__right_clicks
 
     def get_color(self):
-        return self._color
+        return self.color
 
     def __repr__(self):
         return "Brak miny"
@@ -228,32 +328,39 @@ class FieldWithMine(Field):
     """
     Klasa dziedzicząca po zwykłym polu, ale zawierająca minę.
     """
+
     def event_handler(self, event):
-        if not self._clicked:
+        """
+        :param event: przychodzące wydarzenie
+        :return: zwraca zawsze fałsz celem zgodności zwracanego typu z metodą, po której dziedziczy
+        """
+        if not self.get_clicked():
             if event.type == pg.MOUSEBUTTONDOWN:
-                if self._rect.collidepoint(event.pos):
+                if self.rect.collidepoint(event.pos):
                     left, _, right = pg.mouse.get_pressed(3)
                     if left:
-                        self.left_click()
+                        super().left_click()
                     if right:
                         super().right_click()
         return False
 
-    def left_click(self):
-        self._clicked = True
-
     def set_color(self, color):
-        self._color = color
-
-    def __repr__(self):
-        return "Mina"
+        self.color = color
 
 
 class Interface:
     """
     Klasa opisująca interfejs naszej gry, tworzy pola oraz je potem wyświetla.
     """
+
     def __init__(self, screen, font, game, background_color=white):
+        """
+        Konstruktor interfejsu tworzący wszystkie potrzebne guziki,
+        :param screen: określony ekran
+        :param font: określony font
+        :param game: gra, z którą zaczynamy
+        :param background_color: kolor tła
+        """
         self._screen = screen
         self._font = font
         self._game = game
@@ -296,32 +403,32 @@ class Interface:
 
         pg.draw.line(self._screen, (0, 0, 0), (0, 105), (400, 105), 2)
 
-        self._message = self._game.get_message()
-
         # Wyświetlanie komunikatów do gracza o problemach, bądź rezultacie rozgrywki
         if self._message == 0:
             write_text(self._font, self._screen, "Niepoprawny rozmiar planszy!", (5, 115))
-            write_text(self._font, self._screen, "Uruchomiono grę domyślną.", (5, 135))
         elif self._message == 1:
             write_text(self._font, self._screen, "Niepoprawna liczba min.", (5, 115))
-            write_text(self._font, self._screen, "Uruchomiono grę domyślną.", (5, 135))
-        elif self._message == 2:
+        if self._message == 2:
             write_text(self._font, self._screen, "Przegrałeś!", (155, 125))
         elif self._message == 3:
             write_text(self._font, self._screen, "Wygrałeś!", (157, 125))
 
+        # Ikony liczby min i flag
         for prop in self._properties:
             prop.draw(self._screen, 0, True)
 
-        rect_mine = self._properties[1].get_rect()
+        # X w liczbie flag
+        rect_mine = self._properties[1].rect
         pg.draw.line(self._screen, (0, 0, 0), rect_mine.bottomleft, rect_mine.topright, 3)
         pg.draw.line(self._screen, (0, 0, 0), rect_mine.bottomright, rect_mine.topleft, 3)
 
-        rect_mine = self._properties[2].get_rect()
+        # Pytajnik w liczbie flag
+        rect_mine = self._properties[2].rect
         write_text(self._font, self._screen, "?",
                    (rect_mine.centerx - self._font.get_height() / 3.6,
                     rect_mine.centery - self._font.get_height() / 2.4))
 
+        # Liczby flag
         flags = self._game.get_flags_count()
         write_text(self._font, self._screen, ": " + str(self._game.get_mines()), (45, 560))
         write_text(self._font, self._screen, ": " + str(flags[0]), (175, 560))
@@ -340,7 +447,7 @@ class Interface:
         self._attributes = []
         if self._button.event_handler(event):
             for box in self._boxes:
-                if box.get_value() != 0:
+                if box.get_value() >= 0:
                     self._attributes.append(box.get_value())
                 box.clear()
 
@@ -352,12 +459,21 @@ class Interface:
     def set_message(self, message):
         self._message = message
 
+    def get_message(self):
+        return self._message
+
     def set_game(self, game):
-        # Setter ustawiający nową grę
-        self._message = None
+        """
+        Setter ustawiający nową grę
+        :param game: nowa gra
+        """
         self._game = game
+        self._message = self._game.get_message()
 
     def areTextBoxesEmpty(self):
+        """
+        Metoda sprawdzająca czy pola do wpisywania danych są puste.
+        """
         counter = 0
         for box in self._boxes:
             if box.isEmpty():

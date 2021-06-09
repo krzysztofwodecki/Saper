@@ -5,11 +5,11 @@ from src import interface
 size_condition = lambda n, m: n > 15 or n < 2 or m > 15 or m < 2
 mines_condition = lambda mines, n, m: mines < 0 or mines > m * n
 
-# Domyślna plansza
-default_board = (6, 6, 4)
+# Domyślny kolor
 white = (255, 255, 255)
 
-def create_field_arrays(n, m, mines, color="white"):
+
+def create_field_arrays(n, m, mines, color=white):
     """
     Funckja tworząca plansze pod postacią macierzy pól zarówno z jak i bez min. Funkcja korzysta z biblioteki numpy
     celem optymalizacji czasu pracy oraz potrzeby wykorzystania bardziej zaawansowanych wariantów generatora range()
@@ -36,8 +36,8 @@ def create_field_arrays(n, m, mines, color="white"):
         b = np.random.randint(0, n)
         if not isinstance(mines_array[a][b], interface.FieldWithMine):
             i -= 1
-            mines_array[a][b] = interface.FieldWithMine(mines_array[a][b].get_x(), mines_array[a][b].get_y(),
-                                                        mines_array[a][b].get_w(), mines_array[a][b].get_h(), color)
+            mines_array[a][b] = interface.FieldWithMine(mines_array[a][b].x, mines_array[a][b].y,
+                                                        mines_array[a][b].w, mines_array[a][b].h, color)
     return mines_array
 
 
@@ -49,18 +49,23 @@ def border_values(n, m, mines_array):
     :param mines_array: macierz pól
     :return: macierz liczby min w każdym polu
     """
-    border = []
-    for i, row in enumerate(mines_array):
-        border_sub_array = []
-        for j, field in enumerate(row):
-            counter = 0
-            for q in range(i - 1 if i > 0 else 0, i + 2 if i + 2 <= m else i + 1):
-                for p in range(j - 1 if j > 0 else 0, j + 2 if j + 2 <= n else j + 1):
-                    if isinstance(mines_array[q][p], interface.FieldWithMine):
-                        counter += 1
-            border_sub_array.append(counter)
-        border.append(border_sub_array)
-    return np.array(border)
+    return np.array([[count_mines_nearby(n, m, mines_array, i, j) for j, field in enumerate(row)]
+                     for i, row in enumerate(mines_array)])
+
+
+def count_mines_nearby(n, m, mines_array, i, j):
+    """
+    Funkcja tworząca macierz prawdy dookoła danego pola i zliczająca liczbę wystąpień tej prawdy.
+    :param n: pierwszy rozmiar planszy
+    :param m: drugi rozmiar planszy
+    :param mines_array: macierz pól
+    :param i: pierwszy indeks pola
+    :param j: drugi indeks pola
+    :return:
+    """
+    return np.sum(np.array([[1 if isinstance(mines_array[q][p], interface.FieldWithMine) else 0
+                            for p in range(j - 1 if j > 0 else 0, j + 2 if j + 2 <= n else j + 1)]
+                            for q in range(i - 1 if i > 0 else 0, i + 2 if i + 2 <= m else i + 1)]))
 
 
 class IncorrectBoardSize(Exception):
@@ -82,11 +87,11 @@ class Game:
     Klasa definiująca logiczną część gry.
     """
     def __init__(self, n, m, mines, screen=None, color=white):
-        self._screen = screen
-        self._color = color
-        self._game_over = False
-        self._cheat = False
-        self._message = None
+        self.__screen = screen
+        self.__color = color
+        self.__game_over = False
+        self.__cheat = False
+        self.__message = None
 
         # Część decydująca o poprawności nadchodzących danych.
         try:
@@ -95,22 +100,16 @@ class Game:
             elif mines_condition(mines, n, m):
                 raise IncorrectMinesValue
         except IncorrectBoardSize:
-            # Niepoprawny rozmiar planszy. Ustawia odpowiednią wiadomość do wysłania do interfejsu i inicjuje
-            # domyślną grę.
-            self._message = 0
-            self._n, self._m, self._mines = default_board
+            # Niepoprawny rozmiar planszy. Ustawia odpowiednią wiadomość do wysłania do interfejsu.
+            self.__message = 0
         except IncorrectMinesValue:
-            # Niepoprawna liczba min. Ustawia odpowiednią wiadomość do wysłania do interfejsu i inicjuje
-            # domyślną grę.
-            self._message = 1
-            self._n, self._m, self._mines = default_board
+            # Niepoprawna liczba min. Ustawia odpowiednią wiadomość do wysłania do interfejsu.
+            self.__message = 1
         else:
             self._n = n
             self._m = m
             self._mines = mines
-        finally:
-            # Wywoływane są funkcje tworzące macierz pól oraz macierz liczby sąsiednich min.
-            self._fields = create_field_arrays(self._n, self._m, self._mines, self._color)
+            self._fields = create_field_arrays(self._n, self._m, self._mines, self.__color)
             self._border_values = border_values(self._n, self._m, self._fields)
 
     def display(self):
@@ -120,7 +119,7 @@ class Game:
         for i, row in enumerate(self._fields):
             for j, field in enumerate(row):
                 field.set_border_mines(self._border_values[i][j])
-                field.draw(self._screen, 0, True)
+                field.draw(self.__screen, 0, True)
 
     def reveal_nearby(self, i, j):
         """
@@ -150,11 +149,14 @@ class Game:
         for i, row in enumerate(self._fields):
             for j, field in enumerate(row):
                 if isinstance(field, interface.FieldWithMine):
-                    while field.get_right_clicks() != 0:
-                        field.right_click()
+                    field.set_right_clicks(0)
 
     def event_handler(self, event):
-        if not self._game_over:
+        """
+        Event handler dla logiki iterujący po każdym polu w macierzy i przekazujący do każdego pola event.
+        :param event: przychodzące wydarzenie
+        """
+        if not self.__game_over:
             for i, row in enumerate(self._fields):
                 for j, field in enumerate(row):
                     if isinstance(field, interface.FieldWithMine):
@@ -166,11 +168,16 @@ class Game:
                         # Jeśli tak to nie dzieje się nic, jeśli nie to odkrywane są pola sąsiadujące.
                         # Sprawdzany jest również warunek wygranej.
                         is_empty = field.event_handler(event)
+                        if field.get_clicked():
+                            field.set_right_clicks(0)
                         if is_empty:
                             self.reveal_nearby(i, j)
                         self.check_win_condition()
 
     def check_lose_condition(self):
+        """
+        Metoda sprawdzająca czy gracz przegrał.
+        """
         click_count = 0
         for i, row in enumerate(self._fields):
             for j, field in enumerate(row):
@@ -180,8 +187,8 @@ class Game:
         if click_count > 0:
             self.reset_mines_flag()
             self.change_mines_color("red")
-            self._game_over = True
-            self._message = 2
+            self.__game_over = True
+            self.__message = 2
 
     def check_win_condition(self):
         """
@@ -204,12 +211,12 @@ class Game:
             # Wariant z kliknięciem wszystkich pól niebędących minami
             self.change_mines_color("green")
             self.reset_mines_flag()
-            self._game_over = True
-            self._message = 3
+            self.__game_over = True
+            self.__message = 3
         elif not_mine_clicked and counter_flags == self._mines:
             # Wariant z zaznaczeniem flagami wszystkich pól z minami
-            self._game_over = True
-            self._message = 3
+            self.__game_over = True
+            self.__message = 3
 
     def get_flags_count(self):
         """
@@ -230,13 +237,13 @@ class Game:
         return self._fields[i][j]
 
     def get_message(self):
-        return self._message
+        return self.__message
 
     def get_game_over(self):
-        return self._game_over
+        return self.__game_over
 
     def get_color(self):
-        return self._color
+        return self.__color
 
     def get_mines(self):
         return self._mines
@@ -245,7 +252,7 @@ class Game:
         """
         Metoda ustawiająca cheaty do gry po wciśnięciu kombinacji "xyzzy" oraz zmieniająca kolor pól z minami.
         """
-        if not self._cheat:
-            self._cheat = True
-            r, g, b = self._color
+        if not self.__cheat:
+            self.__cheat = True
+            r, g, b = self.__color
             self.change_mines_color((r - 30 if r >= 30 else 0, g - 20 if g >= 20 else 0, b - 10 if b >= 10 else 0))
