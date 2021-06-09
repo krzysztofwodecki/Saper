@@ -220,7 +220,7 @@ class WinConditions(unittest.TestCase):
         self.assertEqual(3, game.get_message())
 
 
-class NewGame(unittest.TestCase):
+class ResetsInNewGame(unittest.TestCase):
     def test_checkFieldShouldResetInNewGame(self):
         """
         Test nr 11 - sprawdzenie pól
